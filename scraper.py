@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # This Python 3 environment comes with many helpful analytics libraries installed
 # It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
 # For example, here's several helpful packages to load
@@ -35,3 +36,26 @@ def get_arXiv_id(researcher="researcher"):
     return id
 
 get_arXiv_id('K S Stelle')
+=======
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
+from phd_ai.research import get_latest_paper_for_researcher
+
+def get_arXiv_id(researcher: str = "researcher") -> str:
+    return get_latest_paper_for_researcher(researcher).arxiv_id
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Get the latest arXiv id for a researcher.")
+    parser.add_argument("--researcher", default="Ciaran O'Hare")
+    args = parser.parse_args()
+    print(get_arXiv_id(args.researcher))
+
+
+if __name__ == "__main__":
+    main()
+>>>>>>> 6ae6139 (pushing things i kept locally for years)
