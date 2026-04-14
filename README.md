@@ -46,6 +46,12 @@ The root scripts are lightweight compatibility entry points. The actual applicat
 pip install -e .
 ```
 
+5. Optionally create an applicant profile for letter headers and language preference:
+
+```bash
+python collect_applicant_info.py
+```
+
 ## Usage
 
 Run the full linked pipeline:
@@ -54,12 +60,19 @@ Run the full linked pipeline:
 python main.py --researcher "Ciaran O'Hare"
 ```
 
+If you want to explicitly point at an applicant profile:
+
+```bash
+python main.py --researcher "Ciaran O'Hare" --applicant-profile ./applicant_profile.json
+```
+
 This saves a full run folder into `outputs/applications/`, for example:
 
 ```text
 outputs/applications/20260414-153012_ciaran-ohare/
 ├── README.md
 ├── application_package.json
+├── applicant_profile.json
 ├── cover_letter.md
 ├── cv_skills.json
 ├── fit_analysis.json
@@ -116,6 +129,7 @@ The main workflow is now `main.py` or `phd-ai pipeline`, both of which:
 7. generate a linked cover letter.
 
 The generated writing is instructed to use UK English.
+You can override that by setting `UK` or `US` when you create the applicant profile.
 
 ## Notes
 

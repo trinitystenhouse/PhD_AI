@@ -10,6 +10,7 @@ class Settings:
     openai_api_key: str
     openai_model: str = "gpt-4o-mini"
     cv_path: Path | None = None
+    applicant_profile_path: Path | None = None
     wandb_disabled: bool = True
 
 
@@ -34,6 +35,8 @@ def load_settings(env_path: str | Path = ".env") -> Settings:
 
     cv_path_env = os.getenv("CV_PATH", "").strip()
     cv_path = Path(cv_path_env).expanduser() if cv_path_env else None
+    profile_path_env = os.getenv("APPLICANT_PROFILE_PATH", "").strip()
+    applicant_profile_path = Path(profile_path_env).expanduser() if profile_path_env else None
 
     wandb_disabled = os.getenv("WANDB_DISABLED", "true").lower() in {"1", "true", "yes"}
 
@@ -41,6 +44,6 @@ def load_settings(env_path: str | Path = ".env") -> Settings:
         openai_api_key=api_key,
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini",
         cv_path=cv_path,
+        applicant_profile_path=applicant_profile_path,
         wandb_disabled=wandb_disabled,
     )
-

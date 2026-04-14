@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from phd_ai.applicant import load_applicant_profile
 from phd_ai.cover_letter import generate_cover_letter
 from phd_ai.cv import extract_cv_research_fit, extract_cv_skills
 from phd_ai.output import build_run_directory, save_json_output, save_text_output
@@ -12,12 +13,14 @@ from phd_ai.research import build_research_dossier
 def build_application_package(
     researcher: str,
     cv_path: Path,
+    applicant_profile_path: Path | None,
     api_key: str,
     model_name: str,
     recent_paper_count: int = 3,
     notable_paper_count: int = 2,
     candidate_paper_count: int = 8,
 ) -> dict:
+    applicant_profile = load_applicant_profile(applicant_profile_path)
     research_dossier = build_research_dossier(
         researcher=researcher,
         api_key=api_key,
@@ -45,12 +48,14 @@ def build_application_package(
         researcher=researcher,
         research_dossier=research_dossier,
         fit_analysis=fit_analysis,
+        applicant_profile=applicant_profile,
         api_key=api_key,
         model_name=model_name,
     )
 
     return {
         "researcher": researcher,
+        "applicant_profile": applicant_profile,
         "research_dossier": research_dossier,
         "cv_skills": cv_skills,
         "fit_analysis": fit_analysis,
@@ -191,6 +196,7 @@ def save_application_package(package: dict, output_dir: Path) -> dict:
     run_dir = build_run_directory(output_dir, package["researcher"])
     run_dir.mkdir(parents=True, exist_ok=True)
 
+    applicant_profile_path = save_json_output(package.get("applicant_profile", {}), run_dir / "applicant_profile.json")
     research_dossier_path = save_json_output(package["research_dossier"], run_dir / "research_dossier.json")
     public_information_path = save_json_output(
         package["research_dossier"].get("public_information", {}),
@@ -203,6 +209,7 @@ def save_application_package(package: dict, output_dir: Path) -> dict:
 
     saved_paths = {
         "run_dir": str(run_dir),
+        "applicant_profile": str(applicant_profile_path),
         "research_dossier": str(research_dossier_path),
         "public_information": str(public_information_path),
         "cv_skills": str(cv_skills_path),
@@ -220,6 +227,7 @@ def save_application_package(package: dict, output_dir: Path) -> dict:
         f"Researcher: {package['researcher']}",
         "",
         "Saved artefacts:",
+        f"- Applicant profile: {saved_paths['applicant_profile']}",
         f"- Research dossier: {saved_paths['research_dossier']}",
         f"- Public information: {saved_paths['public_information']}",
         f"- CV skills: {saved_paths['cv_skills']}",

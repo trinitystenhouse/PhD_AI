@@ -8,3 +8,4 @@ wandb/
 outputs/
 src/phd_ai.egg-info/
 *.pdf
+applicant_profile.json
