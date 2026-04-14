@@ -178,6 +178,97 @@ def _extract_json_object(text: str) -> dict:
     raise ValueError("Model response did not contain valid JSON.")
 
 
+def search_public_researcher_information(
+    researcher: str,
+    api_key: str,
+    model_name: str,
+    num_results: int = 5,
+) -> dict:
+    import requests
+    from bs4 import BeautifulSoup
+    from googlesearch import search
+    from langchain.chains import LLMChain
+    from langchain.prompts import PromptTemplate
+
+    query = f"{researcher} researcher"
+    try:
+        urls = list(search(query, num_results=num_results))
+    except TypeError:
+        urls = list(search(query, num=num_results, stop=num_results, pause=2.0))
+    results: list[dict] = []
+
+    for url in urls:
+        try:
+            response = requests.get(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; PhD-AI/0.1)"},
+                timeout=15,
+            )
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            title = soup.title.get_text(" ", strip=True) if soup.title else ""
+            description = ""
+            meta = soup.find("meta", attrs={"name": "description"})
+            if meta and meta.get("content"):
+                description = meta["content"].strip()
+            if not description:
+                og_meta = soup.find("meta", attrs={"property": "og:description"})
+                if og_meta and og_meta.get("content"):
+                    description = og_meta["content"].strip()
+            results.append(
+                {
+                    "url": url,
+                    "title": title,
+                    "description": description,
+                }
+            )
+        except Exception:
+            results.append(
+                {
+                    "url": url,
+                    "title": "",
+                    "description": "",
+                }
+            )
+
+    llm = build_llm(api_key, model_name)
+    prompt = PromptTemplate(
+        template=(
+            "You are summarising public information about a researcher.\n"
+            "Use UK English.\n"
+            "Researcher: {researcher}\n\n"
+            "Below are Google search results gathered using the query \"{query}\".\n"
+            "Summarise any public information that seems relevant for understanding the person's institution, "
+            "research area, group affiliations, project themes, or broader academic profile.\n"
+            "Be cautious: only infer from the provided results.\n\n"
+            "{results_text}\n\n"
+            "Return valid JSON with this exact shape:\n"
+            "{{\n"
+            '  "summary": "short paragraph",\n'
+            '  "institution_signals": ["item"],\n'
+            '  "research_signals": ["item"],\n'
+            '  "profile_signals": ["item"]\n'
+            "}}\n"
+        ),
+        input_variables=["researcher", "query", "results_text"],
+    )
+    results_text = "\n\n".join(
+        [
+            f"URL: {item['url']}\nTitle: {item['title']}\nDescription: {item['description']}"
+            for item in results
+        ]
+    )
+    chain = LLMChain(llm=llm, prompt=prompt, verbose=False)
+    raw = chain.run({"researcher": researcher, "query": query, "results_text": results_text})
+    summary = _extract_json_object(raw)
+
+    return {
+        "query": query,
+        "results": results,
+        "summary": summary,
+    }
+
+
 def select_notable_papers(
     researcher: str,
     papers: list[ResearchPaper],
@@ -326,6 +417,11 @@ def build_research_dossier(
         api_key=api_key,
         model_name=model_name,
     )
+    public_information = search_public_researcher_information(
+        researcher=researcher,
+        api_key=api_key,
+        model_name=model_name,
+    )
 
     return {
         "researcher": researcher,
@@ -341,4 +437,5 @@ def build_research_dossier(
         "notable_papers": notable["papers"],
         "notable_selection_reasoning": notable["reasoning"],
         "profile": profile,
+        "public_information": public_information,
     }

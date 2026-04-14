@@ -91,6 +91,7 @@ def build_research_summary_markdown(package: dict, saved_paths: dict) -> str:
     dossier = package.get("research_dossier", {})
     fit_analysis = package.get("fit_analysis", {})
     profile = dossier.get("profile", {})
+    public_information = dossier.get("public_information", {})
     profile_items = profile.get("researcher_profile", []) if isinstance(profile, dict) else []
 
     core_topics: list[str] = []
@@ -116,6 +117,7 @@ def build_research_summary_markdown(package: dict, saved_paths: dict) -> str:
 
     recent_papers = dossier.get("recent_papers", [])
     notable_papers = dossier.get("notable_papers", [])
+    public_summary = public_information.get("summary", {}) if isinstance(public_information, dict) else {}
 
     lines = [
         f"# Application Summary: {package['researcher']}",
@@ -150,6 +152,17 @@ def build_research_summary_markdown(package: dict, saved_paths: dict) -> str:
     if dossier.get("notable_selection_reasoning"):
         lines.extend(["", "## Why These Papers Look Notable", dossier["notable_selection_reasoning"]])
 
+    if public_summary:
+        lines.extend(["", "## Public Researcher Context"])
+        if public_summary.get("summary"):
+            lines.append(public_summary["summary"])
+        for item in public_summary.get("institution_signals", []):
+            lines.append(f"- Institution signal: {item}")
+        for item in public_summary.get("research_signals", []):
+            lines.append(f"- Research signal: {item}")
+        for item in public_summary.get("profile_signals", []):
+            lines.append(f"- Profile signal: {item}")
+
     lines.extend(["", "## Inferred Research Themes"])
     if core_topics:
         lines.extend([f"- {item}" for item in core_topics])
@@ -179,6 +192,10 @@ def save_application_package(package: dict, output_dir: Path) -> dict:
     run_dir.mkdir(parents=True, exist_ok=True)
 
     research_dossier_path = save_json_output(package["research_dossier"], run_dir / "research_dossier.json")
+    public_information_path = save_json_output(
+        package["research_dossier"].get("public_information", {}),
+        run_dir / "public_information.json",
+    )
     cv_skills_path = save_json_output(package["cv_skills"], run_dir / "cv_skills.json")
     fit_analysis_path = save_json_output(package["fit_analysis"], run_dir / "fit_analysis.json")
     cover_letter_path = save_text_output(package["cover_letter"], run_dir / "cover_letter.md")
@@ -187,6 +204,7 @@ def save_application_package(package: dict, output_dir: Path) -> dict:
     saved_paths = {
         "run_dir": str(run_dir),
         "research_dossier": str(research_dossier_path),
+        "public_information": str(public_information_path),
         "cv_skills": str(cv_skills_path),
         "fit_analysis": str(fit_analysis_path),
         "cover_letter": str(cover_letter_path),
@@ -203,6 +221,7 @@ def save_application_package(package: dict, output_dir: Path) -> dict:
         "",
         "Saved artefacts:",
         f"- Research dossier: {saved_paths['research_dossier']}",
+        f"- Public information: {saved_paths['public_information']}",
         f"- CV skills: {saved_paths['cv_skills']}",
         f"- Fit analysis: {saved_paths['fit_analysis']}",
         f"- Research summary: {saved_paths['research_summary']}",

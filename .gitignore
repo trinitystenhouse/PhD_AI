@@ -7,4 +7,4 @@ __pycache__/
 wandb/
 outputs/
 src/phd_ai.egg-info/
-
+*.pdf

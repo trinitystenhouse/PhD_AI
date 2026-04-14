@@ -39,6 +39,8 @@ def generate_cover_letter(
             "The target researcher is {researcher}.\n"
             "Use the research dossier, fit analysis, and CV evidence below to write a concise, professional letter "
             "that explicitly connects the applicant's prior research to the researcher's agenda.\n"
+            "Use any reliable public-profile context included in the dossier to make the letter better informed, "
+            "but do not invent facts.\n"
             "Avoid generic praise and be specific about overlapping topics, methods, and why the fit is credible.\n\n"
             "Research dossier:\n{research_dossier}\n\n"
             "Fit analysis:\n{fit_analysis}\n\n"
