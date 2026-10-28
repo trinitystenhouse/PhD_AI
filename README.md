@@ -16,7 +16,6 @@ It can:
 ```text
 .
 ├── main.py
-├── scraper.py
 ├── CV_load.py
 ├── write_cover_letter.py
 ├── link_with_CV.py
